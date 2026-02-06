@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FortiGate IP Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff6700 0%, #ff8c42 50%, #ffb347 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: #ff6700;
+            box-shadow: 0 0 0 3px rgba(255, 103, 0, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        button {
+            padding: 15px;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #submitBtn {
+            background: linear-gradient(135deg, #ff6700 0%, #ff8c42 100%);
+        }
+
+        #removeBtn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        #checkBtn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ff6700;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.active {
+            display: block;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .result-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-item.success {
+            background: #c3f3d4;
+        }
+
+        .result-item.error {
+            background: #ffcdd2;
+        }
+
+        .result-item.warning {
+            background: #fff3cd;
+        }
+
+        .status-icon {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .helper-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+
+        .action-badge.block {
+            background: linear-gradient(135deg, #ff6700 0%, #ff8c42 100%);
+            color: white;
+        }
+
+        .action-badge.remove {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .action-badge.check {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+    <!-- Header com usuário e logout -->
+    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 20px;">
+        <span style="font-size: 14px; color: #666; margin-right: 10px;">👤 {{ username }}</span>
+        <a href="{{ url_for('logout') }}" style="padding: 8px 15px; background: #e74c3c; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: 600; transition: all 0.3s ease;">
+            🚪 Sair
+        </a>
+    </div>
+
+    <!-- Título centralizado -->
+    <h1>FortiGate IP Manager</h1>
+    <p class="subtitle">Bloqueie e remova IPs de forma centralizada</p>
+
+        <form id="blockForm">
+            <div class="form-group">
+                <label for="fortigate">Selecione o Fortigate:</label>
+                <select id="fortigate" name="fortigate" required>
+                    <option value="">-- Escolha um Fortigate --</option>
+                    {% for fg in fortigates %}
+                    <option value="{{ loop.index0 }}">{{ fg.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="group">Grupo de Bloqueio:</label>
+                <input type="text" id="group" name="group" value="IPs-Block" required>
+                <p class="helper-text">Nome do grupo de endereços no Fortigate</p>
+            </div>
+
+            <div class="form-group">
+                <label for="ips">IPs para Gerenciar:</label>
+                <textarea id="ips" name="ips" placeholder="192.168.10.10&#10;192.168.10.11,192.168.10.12&#10;10.0.0.1" required></textarea>
+                <p class="helper-text">Separe múltiplos IPs por vírgula ou quebra de linha</p>
+            </div>
+
+            <div class="button-group">
+                <button type="button" id="submitBtn" onclick="submitAction('bloquear')">
+                    ➕ Bloquear
+                </button>
+                <button type="button" id="removeBtn" onclick="submitAction('remover')">
+                    ➖ Remover
+                </button>
+                <button type="button" id="checkBtn" onclick="submitAction('verificar')">
+                    🔍 Verificar
+                </button>
+            </div>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #666;">Processando...</p>
+        </div>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        async function submitAction(action) {
+            const fortigateId = document.getElementById('fortigate').value;
+            const groupName = document.getElementById('group').value;
+            const ipsText = document.getElementById('ips').value;
+
+            // Validações
+            if (!fortigateId) {
+                alert('Por favor, selecione um Fortigate');
+                return;
+            }
+
+            if (!ipsText.trim()) {
+                alert('Por favor, informe pelo menos um IP');
+                return;
+            }
+
+            // Normaliza IPs (substitui quebras de linha por vírgulas)
+            const ips = ipsText.replace(/\n/g, ',').trim();
+
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const buttons = document.querySelectorAll('button');
+
+            // Reseta resultado anterior
+            result.classList.remove('active', 'success', 'error');
+            result.innerHTML = '';
+
+            // Mostra loading
+            buttons.forEach(b => b.disabled = true);
+            loading.classList.add('active');
+
+            try {
+                const response = await fetch(`/${action}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fortigate_id: parseInt(fortigateId),
+                        group_name: groupName,
+                        ips: ips
+                    })
+                });
+
+                const data = await response.json();
+
+                // Esconde loading
+                loading.classList.remove('active');
+                buttons.forEach(b => b.disabled = false);
+
+                // Mostra resultado
+                result.classList.add('active');
+
+                if (data.success) {
+                    result.classList.add('success');
+                    
+                    let actionText = '';
+                    let actionClass = '';
+                    
+                    if (action === 'bloquear') {
+                        actionText = 'Bloqueio';
+                        actionClass = 'block';
+                    } else if (action === 'remover') {
+                        actionText = 'Remoção';
+                        actionClass = 'remove';
+                    } else if (action === 'verificar') {
+                        actionText = 'Verificação';
+                        actionClass = 'check';
+                    }
+                    
+                    let html = `<h3>✅ ${actionText} Concluído</h3>`;
+                    html += `<p><strong>Fortigate:</strong> ${data.fortigate} <span class="action-badge ${actionClass}">${action}</span></p>`;
+                    
+                    // Labels customizados para verificação
+                    let labelSucesso = action === 'verificar' ? 'No Grupo' : 'Sucesso';
+                    let labelFalhas = action === 'verificar' ? 'Fora do Grupo' : 'Falhas';
+                    
+                    html += `<div class="stats">
+                        <div class="stat">
+                            <div class="stat-number">${data.total}</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number" style="color: #28a745;">${data.sucesso}</div>
+                            <div class="stat-label">${labelSucesso}</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number" style="color: #dc3545;">${data.falhas}</div>
+                            <div class="stat-label">${labelFalhas}</div>
+                        </div>
+                    </div>`;
+
+                    html += `<div style="margin-top: 15px;">`;
+                    data.resultados.forEach(item => {
+                        let className = 'result-item ';
+                        let icon = '';
+                        
+                        if (item.status === 'sucesso' || item.status === 'encontrado') {
+                            className += 'success';
+                            icon = '✓';
+                        } else if (item.status === 'ja_existe' || item.status === 'warning' || item.status === 'nao_encontrado') {
+                            className += 'warning';
+                            icon = '⚠';
+                        } else {
+                            className += 'error';
+                            icon = '✗';
+                        }
+                        
+                        html += `<div class="${className}">
+                            <span class="status-icon">${icon}</span>
+                            <span><strong>${item.ip}</strong> - ${item.message}</span>
+                        </div>`;
+                    });
+                    html += `</div>`;
+
+                    result.innerHTML = html;
+                } else {
+                    result.classList.add('error');
+                    let html = `<h3>❌ Erro</h3><p>${data.message}</p>`;
+                    
+                    // Se houver IPs protegidos, exibe a lista
+                    if (data.protegidos && data.protegidos.length > 0) {
+                        html += `<div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px;">`;
+                        // html += `<strong>IPs Protegidos:</strong><br>`;
+                        // html += `<br>`;
+                        data.protegidos.forEach(msg => {
+                            html += `<div style="margin: 5px 0;">${msg}</div>`;
+                        });
+                        html += `</div>`;
+                    }
+                    
+                    result.innerHTML = html;
+                }
+
+            } catch (error) {
+                loading.classList.remove('active');
+                buttons.forEach(b => b.disabled = false);
+                
+                result.classList.add('active', 'error');
+                result.innerHTML = `<h3>❌ Erro de Conexão</h3><p>${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
